@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Input;
 using System.Windows.Interop;
 
@@ -18,7 +19,28 @@ namespace StatsDisplay
 		[DllImport("user32.dll")]
 		private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-		private const int WmHotKey = 0x0312;
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+        private static string GetActiveWindowTitle()
+        {
+            const int nChars = 256;
+            StringBuilder Buff = new StringBuilder(nChars);
+            IntPtr handle = GetForegroundWindow();
+
+            if (GetWindowText(handle, Buff, nChars) > 0)
+            {
+                return Buff.ToString();
+            }
+
+            return null;
+        }
+
+        private const string HeroesWindowTitle = "Heroes of the Storm";
+        private const int WmHotKey = 0x0312;
 
 		private bool _disposed = false;
 
@@ -68,8 +90,12 @@ namespace StatsDisplay
 					HotKey hotKey;
 
 					if (_dictHotKeyToCalBackProc.TryGetValue((int)msg.wParam, out hotKey)) {
-						hotKey.Pressed?.Invoke(hotKey, new EventArgs());
-						handled = true;
+                        string windowTitle = GetActiveWindowTitle();
+
+                        if (windowTitle.Equals(HeroesWindowTitle)) {
+                            hotKey.Pressed?.Invoke(hotKey, new EventArgs());
+                            handled = true;
+                        }
 					}
 				}
 			}
