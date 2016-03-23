@@ -37,6 +37,8 @@ namespace StatsDisplay
 		{
 			SetExceptionHandlers();
 
+            this.ShowActivated = false;
+
 			logger.Info("App started");
 
 			if (Settings.UpgradeRequired) {
